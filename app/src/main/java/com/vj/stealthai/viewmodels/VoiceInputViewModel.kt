@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -15,9 +16,17 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.vj.stealthai.R
 import com.vj.stealthai.services.GeminiService
+import io.livekit.android.ConnectOptions
+import io.livekit.android.LiveKit
+import io.livekit.android.annotations.Beta
+import io.livekit.android.events.RoomEvent
+import io.livekit.android.events.collect
+import io.livekit.android.room.Room
+import io.livekit.android.room.track.LocalAudioTrack
+import io.livekit.android.room.types.TranscriptionSegment
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
-import java.util.Locale
 
 /*class VoiceInputViewModel(application: Application) : AndroidViewModel(application) {
     var userInput by mutableStateOf("")
@@ -296,7 +305,12 @@ import java.util.Locale
 }*/
 
 
+@OptIn(Beta::class)
 class VoiceInputViewModel(application: Application) : AndroidViewModel(application) {
+    lateinit var room: Room
+    private lateinit var micTrack: LocalAudioTrack
+
+    var isConnectedToRoom : Boolean = false
 
     var userInput by mutableStateOf("")
         private set
@@ -309,12 +323,51 @@ class VoiceInputViewModel(application: Application) : AndroidViewModel(applicati
     var isRecording by mutableStateOf(false)
         private set
 
+    var setOfVoiceText = mutableSetOf<String>()
+
     private val geminiService = GeminiService(application.getString(R.string.google_api_key))
     private var speechRecognizer: SpeechRecognizer? = null
 
     fun updateUserInput(input: String) {
         userInput = input
         errorMessage = null
+    }
+
+    init {
+        viewModelScope.launch {
+            launch {
+                room = LiveKit.create(application.applicationContext)
+                room.events.collect { event ->
+                    Log.e("eventName : ", event.toString())
+                    when (event) {
+                        is RoomEvent.Connected -> {
+                            Log.e("Roomname : ", room.name.toString())
+                            isConnectedToRoom = true
+                        }
+                        is RoomEvent.TrackSubscribed -> onTrackSubscribed(event)
+                        is RoomEvent.Disconnected -> {
+                            isConnectedToRoom = false
+                            isRecording = false
+                        }
+                        is RoomEvent.DataReceived -> {
+                            val transcript = event.data.toString(Charsets.UTF_8)
+                            Log.e("Roomname : ", transcript)
+                        }
+                        is RoomEvent.TranscriptionReceived -> {
+                            //val transcript = event.transcriptionSegments
+                            val finalSegments = event.transcriptionSegments
+                                .filter { it.final }
+                                .sortedBy { it.firstReceivedTime }
+                            appendTranscriptStreaming(finalSegments)
+                           // Log.e("Roomname : ", transcript.to())
+                        }
+                        else -> {
+
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun startSpeechRecognition(context: Context) {
@@ -400,6 +453,20 @@ class VoiceInputViewModel(application: Application) : AndroidViewModel(applicati
             }
         }
     }
+
+    private fun appendTranscriptStreaming(newText: List<TranscriptionSegment>) {
+        viewModelScope.launch {
+            for (segment in newText) {
+                Log.e("Roomname segment id :", segment.id + " text : " + segment.text)
+                if(!setOfVoiceText.contains(segment.id)) {
+                    setOfVoiceText.add(segment.id)
+                    userInput += segment.text
+                    delay(10L)
+                    Log.e("Roomname segment id :", segment.id + " text : " + segment.text)
+                }
+            }
+        }
+    }
     /*fun showWordStreamingResponse(fullText: String) {
         aiResponse = ""
         viewModelScope.launch {
@@ -414,6 +481,63 @@ class VoiceInputViewModel(application: Application) : AndroidViewModel(applicati
         if (userInput.isNotBlank()) {
             getAIResponse()
             userInput = ""
+        }
+    }
+
+    fun connectToRoom(context: Context) {
+        if(isConnectedToRoom) {
+            room.disconnect()
+            return
+        }
+        isConnectedToRoom = true
+        viewModelScope.launch {
+
+            // Setup event handling.
+            /*launch {
+                room.events.collect { event ->
+                    when (event) {
+                        is RoomEvent.Connected -> {
+                            Log.e("Roomname : ", room.name.toString())
+                            isConnectedToRoom = true
+                        }
+                        is RoomEvent.TrackSubscribed -> onTrackSubscribed(event)
+                        is RoomEvent.Disconnected -> isConnectedToRoom = false
+                        is RoomEvent.DataReceived -> {
+                            val transcript = event.data.toString(Charsets.UTF_8)
+                        }
+                        else -> {}
+                    }
+                }
+            }*/
+
+            // Connect to server.
+            room.connect(
+                "wss://stealth-mode-ai-sa9vk4du.livekit.cloud",
+                context.resources.getString(R.string.livekit_token),
+                ConnectOptions(autoSubscribe = true)
+            )
+            isRecording = true
+
+
+            // Publish audio/video to the room
+            val localParticipant = room.localParticipant
+            localParticipant.setMicrophoneEnabled(true)
+            localParticipant.setCameraEnabled(false)
+        }
+    }
+
+    private fun onTrackSubscribed(event: RoomEvent.TrackSubscribed) {
+        Log.e("log event ", "onTrackSubscribed" + event.track.name)
+//        val track = event.track
+//
+//
+//        room.registerTextStreamHandler("", TextStreamHandler())
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        if(isConnectedToRoom) {
+            room.disconnect()
         }
     }
 }

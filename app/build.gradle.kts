@@ -56,7 +56,7 @@ android {
 }
 
 dependencies {
-
+    implementation(libs.livekit.android)
     implementation(libs.generativeai)
     implementation(libs.androidx.core.ktx.v1120)
     implementation(libs.androidx.lifecycle.runtime.ktx.v262)

@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Stealth Mode AI</string>
-    <string name="google_api_key">add here</string>
+    <string name="google_api_key">AIzaSyCsOBRtHbU_imHTZWkDC6nV_rvJP1P6nCQ</string>
+<!--    <string name="livekit_token">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDg2NzQ3MzQsImlzcyI6IkFQSUhXZjR1bUJ2R0ZOZyIsIm5iZiI6MTc0ODY3MzgzNCwic3ViIjoic3RlYWx0aG1vZGUiLCJ2aWRlbyI6eyJjYW5QdWJsaXNoIjp0cnVlLCJjYW5QdWJsaXNoRGF0YSI6dHJ1ZSwiY2FuU3Vic2NyaWJlIjp0cnVlLCJyb29tIjoic3R0Iiwicm9vbUpvaW4iOnRydWV9fQ.iiLTh2WFcoP2FMkamlwSeJNznGVuMIg1zvaSlDwXDDY</string>-->
+    <string name="livekit_token">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDg4NTQ3MzIsImlzcyI6IkFQSUhXZjR1bUJ2R0ZOZyIsIm5iZiI6MTc0ODg0NzUzMiwic3ViIjoicXVpY2tzdGFydCB1c2VyIGNyamN0MyIsInZpZGVvIjp7ImNhblB1Ymxpc2giOnRydWUsImNhblB1Ymxpc2hEYXRhIjp0cnVlLCJjYW5TdWJzY3JpYmUiOnRydWUsInJvb20iOiJxdWlja3N0YXJ0IHJvb20iLCJyb29tSm9pbiI6dHJ1ZX19.ZOySPpLWhw7EKHTW0TSYMksW_i5YRZYtAdeei_ASIRU</string>
+    <string name="assembly_ai_token">59d00a0b5f924ba08ecd3a130648f062</string>
+    <string name="deepgram_secret_key">de6cced049db0ec2d92f06cdc6b44b821b81dd6e</string>
 </resources>

@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.RecognizerIntent
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -35,11 +36,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.vj.stealthai.ui.theme.VoiceInputAppTheme
 import com.vj.stealthai.viewmodels.VoiceInputViewModel
+import io.livekit.android.LiveKit
+import io.livekit.android.events.RoomEvent
+import io.livekit.android.events.collect
+import io.livekit.android.room.Room
+import io.livekit.android.room.datastream.incoming.TextStreamHandler
+import io.livekit.android.room.track.LocalAudioTrack
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.*
 
 class MainActivity : ComponentActivity() {
+
+//    private lateinit var room: Room
+//    private lateinit var micTrack: LocalAudioTrack
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -52,7 +67,37 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        // Create Room object.
+
+
+        //connectToRoom()
+
+        /*val room = liveKit.connect(
+            url = "wss://yourproject.livekit.cloud",
+            token = "YOUR_JWT_ACCESS_TOKEN"
+        )
+        room = Room(this, this)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                room.connect("wss://stealth-mode-ai-sa9vk4du.livekit.cloud", resources.getString(R.string.livekit_token))
+                LocalAudioTrack.Factory
+                micTrack = LocalAudioTrack.create(this@MainActivity, "mic")
+                room.localParticipant?.publishTrack(micTrack)
+            } catch (e: Exception) {
+                // Handle connection error
+            }
+        }*/
+        /*val token = "PASTE_GENERATED_TOKEN_HERE"
+        val room = LiveKit.connect(
+            url = "wss://stealth-mode-ai-sa9vk4du.livekit.cloud",
+            token = token
+        )*/
     }
+
+
+
+
 }
 
 
@@ -200,13 +245,14 @@ fun VoiceInputScreen(
     viewModel: VoiceInputViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val context = LocalContext.current
+//    viewModel.LiveKitEventListener()
     var showPermissionDialog by remember { mutableStateOf(false) }
-
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            viewModel.startSpeechRecognition(context)
+            //viewModel.startSpeechRecognition(context)
+            viewModel.connectToRoom(context)
         } else {
             showPermissionDialog = true
             Toast.makeText(context, "Microphone permission required", Toast.LENGTH_SHORT).show()
@@ -267,7 +313,8 @@ fun VoiceInputScreen(
                                 context,
                                 Manifest.permission.RECORD_AUDIO
                             ) == PackageManager.PERMISSION_GRANTED -> {
-                                viewModel.startSpeechRecognition(context)
+                                //viewModel.startSpeechRecognition(context)
+                                viewModel.connectToRoom(context)
                             }
                             ActivityCompat.shouldShowRequestPermissionRationale(
                                 context as Activity,

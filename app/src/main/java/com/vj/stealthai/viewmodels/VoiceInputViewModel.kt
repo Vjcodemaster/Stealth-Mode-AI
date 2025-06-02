@@ -342,6 +342,7 @@ class VoiceInputViewModel(application: Application) : AndroidViewModel(applicati
                     when (event) {
                         is RoomEvent.Connected -> {
                             Log.e("Roomname : ", room.name.toString())
+                            isRecording = true
                             isConnectedToRoom = true
                         }
                         is RoomEvent.TrackSubscribed -> onTrackSubscribed(event)
@@ -457,13 +458,13 @@ class VoiceInputViewModel(application: Application) : AndroidViewModel(applicati
     private fun appendTranscriptStreaming(newText: List<TranscriptionSegment>) {
         viewModelScope.launch {
             for (segment in newText) {
-                Log.e("Roomname segment id :", segment.id + " text : " + segment.text)
-                if(!setOfVoiceText.contains(segment.id)) {
-                    setOfVoiceText.add(segment.id)
+                //Log.e("Roomname segment id :", segment.id + " text : " + segment.text)
+               // if(!setOfVoiceText.contains(segment.id)) {
+                   // setOfVoiceText.add(segment.id)
                     userInput += segment.text
                     delay(10L)
-                    Log.e("Roomname segment id :", segment.id + " text : " + segment.text)
-                }
+                    //Log.e("Roomname segment id :", segment.id + " text : " + segment.text)
+                //}
             }
         }
     }
@@ -491,32 +492,12 @@ class VoiceInputViewModel(application: Application) : AndroidViewModel(applicati
         }
         isConnectedToRoom = true
         viewModelScope.launch {
-
-            // Setup event handling.
-            /*launch {
-                room.events.collect { event ->
-                    when (event) {
-                        is RoomEvent.Connected -> {
-                            Log.e("Roomname : ", room.name.toString())
-                            isConnectedToRoom = true
-                        }
-                        is RoomEvent.TrackSubscribed -> onTrackSubscribed(event)
-                        is RoomEvent.Disconnected -> isConnectedToRoom = false
-                        is RoomEvent.DataReceived -> {
-                            val transcript = event.data.toString(Charsets.UTF_8)
-                        }
-                        else -> {}
-                    }
-                }
-            }*/
-
             // Connect to server.
             room.connect(
                 "wss://stealth-mode-ai-sa9vk4du.livekit.cloud",
                 context.resources.getString(R.string.livekit_token),
                 ConnectOptions(autoSubscribe = true)
             )
-            isRecording = true
 
 
             // Publish audio/video to the room
@@ -524,6 +505,10 @@ class VoiceInputViewModel(application: Application) : AndroidViewModel(applicati
             localParticipant.setMicrophoneEnabled(true)
             localParticipant.setCameraEnabled(false)
         }
+    }
+
+    fun disconnectFromRoom(){
+        room.disconnect()
     }
 
     private fun onTrackSubscribed(event: RoomEvent.TrackSubscribed) {

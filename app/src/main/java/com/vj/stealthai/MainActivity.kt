@@ -371,7 +371,11 @@ fun VoiceInputScreen(
                 trailingIcon = {
                     if (viewModel.userInput.isNotBlank()) {
                         IconButton(
-                            onClick = { viewModel.sendTextInput() },
+                            onClick = {
+                                if(viewModel.isConnectedToRoom)
+                                    viewModel.disconnectFromRoom()
+                                viewModel.sendTextInput()
+                            },
                             enabled = !viewModel.isLoading
                         ) {
                             Icon(
@@ -388,7 +392,11 @@ fun VoiceInputScreen(
 
             // Send Button
             Button(
-                onClick = { viewModel.getAIResponse() },
+                onClick = {
+                    if (viewModel.isConnectedToRoom)
+                        viewModel.disconnectFromRoom()
+                    viewModel.getAIResponse()
+                },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !viewModel.isLoading && viewModel.userInput.isNotBlank()
             ) {
